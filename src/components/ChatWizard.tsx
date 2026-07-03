@@ -131,10 +131,11 @@ export default function ChatWizard() {
           await addBot('✅ *Autorização confirmada!* Consultando sua oferta...', D.normal)
           await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
         } else if (result.status === 'NAO_AUTORIZADO' && result.observacao !== 'sem_registro') {
+          // Terminal: biometria concluída, mas sem vínculo/margem CLT no autorizador.
+          // Trata como "sem oferta": finalize consulta a oferta, confirma que não há e
+          // cria o lead no Kommo p/ remarketing (mensagem educada, sem WhatsApp).
           cancelled = true
-          setStep('not_authorized')
-          await addBot('A autorização não foi concluída. Sem ela não consigo consultar sua oferta. 😔', D.normal)
-          await addBot('Se quiser, fale com nossa equipe no WhatsApp. 😊', D.normal)
+          await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
         }
       } catch { /* silencioso — tenta no próximo ciclo */ }
     }
@@ -359,6 +360,8 @@ export default function ChatWizard() {
                     const r = await pollAuthStatus(cpfRef.current)
                     if (r.status === 'AUTORIZADO') {
                       await addBot('✅ *Autorização confirmada!* Consultando sua oferta...', D.normal)
+                      await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
+                    } else if (r.status === 'NAO_AUTORIZADO' && r.observacao !== 'sem_registro') {
                       await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
                     } else {
                       await addBot('Ainda aguardando sua autorização... pode levar alguns segundos. ⏳', D.fast)
