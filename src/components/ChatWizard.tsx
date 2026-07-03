@@ -53,6 +53,8 @@ export default function ChatWizard() {
   const phoneRef    = useRef(''); useEffect(() => { phoneRef.current    = phone    }, [phone])
   // lead criado na captura-primeiro (CARRINHO ABANDONADO); o finalize move esse mesmo lead
   const capturedLeadIdRef = useRef<string | null>(null)
+  // último status/observacao visto no polling — enviado ao finalize p/ detalhar o motivo
+  const lastAuthRef = useRef<{ status?: string; observacao?: string }>({})
 
   // Captura-primeiro: cria o lead no carrinho assim que temos nome+CPF+telefone.
   const captureNow = useCallback(async (phoneDigits: string) => {
@@ -93,6 +95,8 @@ export default function ChatWizard() {
         cpf: cpfV, nome: nomeV, telefone: phoneV,
         data_nascimento: BIRTH_DEFAULT,
         lead_id: capturedLeadIdRef.current,
+        motivo_status: lastAuthRef.current.status,
+        motivo_obs: lastAuthRef.current.observacao,
         ...getUtmParams(),
       })
     } catch {
@@ -133,6 +137,7 @@ export default function ChatWizard() {
       try {
         const result = await pollAuthStatus(cpfRef.current)
         if (cancelled) return
+        lastAuthRef.current = { status: result.status, observacao: result.observacao }
         if (result.status === 'AUTORIZADO') {
           cancelled = true
           await addBot('✅ *Autorização confirmada!* Consultando sua oferta...', D.normal)

@@ -121,6 +121,8 @@ export async function finalize(data: {
   telefone: string
   data_nascimento?: string
   lead_id?: string | null
+  motivo_status?: string
+  motivo_obs?: string
 } & Utms): Promise<FinalizeResponse> {
   if (MOCK_MODE) {
     await sleep(1200)
