@@ -106,23 +106,23 @@ export default function ChatWizard() {
 
     if (res.tem_oferta && res.oferta) {
       const t = res.oferta
-      await addBot('Olha só... 👀', D.normal)
-      await addBot(`🎉 *${first}, você tem uma oferta disponível!*`, D.normal)
+      await addBot('Consulta concluída... 👀', D.normal)
+      await addBot(`🎉 E eu tenho uma *excelente notícia* pra você, *${first}*!`, D.normal)
       await sleep(400)
       await addBot(
-        `Você pode receber até\n*${formatCurrency(t.valor_cliente)}*\nem *${t.quantidade_parcelas}x* de *${formatCurrency(t.valor_parcela)}*`,
+        `💰 Você tem *${formatCurrency(t.valor_cliente)}* pré-aprovados\nem *${t.quantidade_parcelas}x* de *${formatCurrency(t.valor_parcela)}*\ncom desconto direto na folha.`,
         D.slow,
       )
-      await addBot('Quer falar com um especialista agora e garantir? 😊', D.normal)
+      await addBot('Um *especialista* já pode finalizar tudo com você agora, com toda a segurança. Bora garantir? 😊', D.normal)
       setStep('waiting_interest')
     } else {
-      await addBot('Consultei aqui...', D.normal)
+      await addBot('Consulta concluída, *' + first + '*. 🙏', D.normal)
       await addBot(
-        `${first}, no momento não localizei uma oferta disponível pro seu perfil.`,
+        'No momento o C6 não liberou uma oferta pré-aprovada pro seu perfil — mas isso muda com frequência, principalmente a cada *virada de folha*.',
         D.slow,
       )
       await addBot(
-        'Mas já guardei seus dados e te aviso assim que surgir uma condição pra você. 😊',
+        'Já deixei seu cadastro salvo com todo cuidado e, *assim que surgir uma condição pra você, a gente te avisa*. Combinado? 😊',
         D.slow,
       )
       setStep('no_offer_done')
@@ -173,19 +173,20 @@ export default function ChatWizard() {
     setStep('checking')
     if (choice === 'sim') {
       addUser('Sim, trabalho registrado(a) há mais de 3 meses.')
-      await addBot('Perfeito! 🙌', D.fast)
-      await addBot('Pode me informar o seu *CPF*?', D.normal)
+      await addBot('Perfeito, você tem o perfil certo! 🙌', D.fast)
+      await addBot('Agora preciso do seu *CPF* — é com ele que eu faço a consulta *oficial e segura* no C6 pra descobrir o valor liberado especialmente pra você. 🔎', D.slow)
+      await addBot('Pode digitar sem preocupação: seus dados são usados *só pra essa consulta* e protegidos pela *LGPD*. 🔐', D.normal)
       setStep('cpf')
       setInputMode('cpf')
     } else {
       addUser('Não.')
-      await addBot('Entendo, obrigado por responder. 🙏', D.fast)
+      await addBot('Entendo, e agradeço muito sua sinceridade. 🙏', D.fast)
       await addBot(
-        'No momento, para seguir com uma oferta é necessário ter *carteira assinada há mais de 3 meses*.',
+        'No momento, o *Crédito do Trabalhador* exige *carteira assinada há mais de 3 meses* — por isso ainda não consigo seguir com uma oferta pra você.',
         D.slow,
       )
       await addBot(
-        'Assim que sua situação mudar, será um prazer te ajudar. Até breve! 😊',
+        'Mas guarda a gente com carinho: assim que você completar esse tempo, será um prazer te ajudar a conquistar seu crédito. Até breve! 😊',
         D.normal,
       )
       setStep('dismissed')
@@ -196,13 +197,13 @@ export default function ChatWizard() {
   const handleQuickReply = useCallback(async (choice: 'sim' | 'nao') => {
     setStep('checking')
     if (choice === 'sim') {
-      addUser('Sim, quero saber mais! 😊')
-      await addBot('Ótimo! Fale com nossa equipe no WhatsApp para finalizar tudo. 👇', D.normal)
+      addUser('Sim, quero! 😊')
+      await addBot('Perfeito! 🙌 É só tocar no botão abaixo pra falar *agora* com um especialista e liberar seu crédito com toda a segurança. 👇', D.normal)
       setStep('authorized')
     } else {
       addUser('Agora não.')
-      await addBot('Tudo bem, sem pressão. 😊', D.fast)
-      await addBot('Se mudar de ideia, estarei por aqui!', D.normal)
+      await addBot('Sem problema, sem pressão! 😊', D.fast)
+      await addBot('Sua oferta fica *guardada*. Quando quiser seguir, é só me chamar. 💚', D.normal)
       setStep('not_interested')
     }
   }, [addBot])
@@ -210,8 +211,9 @@ export default function ChatWizard() {
   // ── Abertura ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
-      await addBot('Olá! Seja bem-vindo à *Bt+Credi*. 👋', D.fast)
-      await addBot('Antes de começar, como posso te chamar?', D.fast)
+      await addBot('Olá! Que bom te ver por aqui. 👋 Sou o assistente digital da *Bt+Credi*.', D.fast)
+      await addBot('Em poucos passos eu verifico, *de graça e sem compromisso*, quanto de crédito você já tem disponível. 💚', D.normal)
+      await addBot('Pra começar, como você gostaria de ser chamado(a)?', D.fast)
       setInputMode('name')
     }
     init()
@@ -239,10 +241,10 @@ export default function ChatWizard() {
       setNome(value)
       setInputMode('none')
       await addBot(`Prazer, *${first}*! 😊`, D.fast)
-      await addBot('Somos correspondente bancário *autorizado* do C6 Bank.', D.normal)
-      await addBot('Aqui você consulta o *Crédito Trabalhador* — desconto em folha, taxas competitivas, sem burocracia. 💳', D.slow)
+      await addBot('Um ponto importante pra sua tranquilidade: somos *correspondente bancário autorizado do C6 Bank* — toda consulta é oficial e feita direto no banco. 🔒', D.slow)
+      await addBot('Aqui você descobre o *Crédito do Trabalhador*: empréstimo com desconto direto na folha, *juros baixos* e sem burocracia. 💳', D.slow)
       // Qualificador: só segue quem tem carteira assinada há +3 meses.
-      await addBot('Só me confirma uma coisa antes: você trabalha *com carteira assinada (CLT) há mais de 3 meses*? 💼', D.normal)
+      await addBot(`Pra eu já verificar se você tem direito, me confirma uma coisa, ${first}: você está *com carteira assinada (CLT) há mais de 3 meses*? 💼`, D.normal)
       setStep('waiting_clt')
       setInputMode('none')
     }
@@ -258,7 +260,7 @@ export default function ChatWizard() {
       setCpf(cpfDigits)
       setInputMode('none')
       setStep('checking')
-      await addBot('Deixa eu verificar... 🔍', D.fast)
+      await addBot('Ótimo! Deixa eu consultar isso pra você direto no C6... 🔎', D.normal)
 
       let authStatus = 'NAO_AUTORIZADO'
       try {
@@ -268,18 +270,19 @@ export default function ChatWizard() {
 
       if (authStatus === 'AUTORIZADO') {
         // Já autorizado → não precisa de liveness nem de data de nascimento.
-        await addBot('Perfeito, sua identidade já está confirmada! ✅', D.normal)
-        await addBot('Só preciso do seu *celular com DDD* pra finalizar.', D.normal)
+        await addBot('Excelente notícia: sua identidade *já está confirmada* no banco! ✅', D.normal)
+        await addBot('Só falta o seu *celular com DDD* pra eu liberar o resultado e nossa equipe conseguir te acompanhar. 📱', D.normal)
         setStep('waiting_phone_authorized')
         setInputMode('phone')
       } else {
         // Não autorizado → precisa do liveness. Não pedimos mais nascimento
         // (usamos BIRTH_DEFAULT); só o telefone.
+        await addBot('Localizei você no sistema! 🎯', D.fast)
         await addBot(
-          'Para consultar sua oferta no C6 Bank, preciso confirmar sua identidade. É rápido, menos de 1 minuto. 🔒',
+          'Pra liberar a consulta da sua oferta, o C6 pede uma *confirmação de identidade rápida e segura* — leva menos de 1 minuto. 🔒',
           D.slow,
         )
-        await addBot('Qual é o seu *celular com DDD*?', D.normal)
+        await addBot('Me passa seu *celular com DDD*? É por ele que eu te mantenho informado(a) durante o processo. 📱', D.normal)
         setStep('waiting_phone_liveness')
         setInputMode('phone')
       }
@@ -298,7 +301,7 @@ export default function ChatWizard() {
       setInputMode('none')
       // Captura-primeiro: cria o lead no carrinho ANTES de gerar o link.
       await captureNow(digits)
-      await addBot('Gerando seu link de autorização...', D.normal)
+      await addBot('Show! Estou gerando seu *link seguro de autorização*... 🔐', D.normal)
 
       try {
         const result = await generateLiveness({
@@ -308,11 +311,13 @@ export default function ChatWizard() {
           telefone: digits,
           lead_id: capturedLeadIdRef.current,
         })
+        await addBot(`Chegamos no passo mais importante, *${nomeRef.current.split(' ')[0]}*! 🎯`, D.normal)
         await addBot(
-          `Acesse o link abaixo e siga o processo de autorização:\n\n👉 ${result.link}\n\nÉ rápido, menos de 1 minuto! ✅`,
-          D.normal,
+          'Para o C6 liberar sua *oferta completa* — com o valor exato que você pode receber — ele precisa da *sua autorização* para consultar sua margem. É uma confirmação por *selfie*, feita direto no ambiente oficial do banco. 🔒',
+          D.slow,
         )
-        await addBot('Vou verificar automaticamente. Pode ir lá e já volte! ⏳', D.fast)
+        await addBot(`Toca no link abaixo pra autorizar (leva menos de 1 minuto): 👇\n\n${result.link}`, D.normal)
+        await addBot('Assim que você concluir, eu *detecto na hora* e já te mostro o resultado aqui. Pode ir tranquilo(a) — fico no aguardo! ⏳', D.normal)
         setPollCount(0)
         setStep('polling_auth')
       } catch {
