@@ -294,9 +294,9 @@ export default function ChatWizard() {
           lead_id: capturedLeadIdRef.current,
         })
         setLivenessLink(result.link)
-        await addBot(`Último passo, *${nomeRef.current.split(' ')[0]}*! 🎯`, D.normal)
-        await addBot('Pra ver sua *oferta completa*, o C6 precisa da sua *autorização* — uma selfie rápida no app oficial. Eu detecto na hora que você concluir. 🔒', D.slow)
-        await addBot('É só tocar no botão abaixo 👇', D.normal)
+        await addBot(`Falta *só um passo*, *${nomeRef.current.split(' ')[0]}*! 🎯`, D.normal)
+        await addBot('Para liberar sua *oferta completa*, o C6 precisa que você *autorize a consulta* pelo link abaixo — é oficial do banco, seguro e leva menos de 1 minuto. 🔒', D.slow)
+        await addBot('👇 *Toque no botão pra autorizar agora* — assim que concluir, eu já trago sua oferta aqui!', D.normal)
         setStep('polling_auth')
       } catch {
         await addBot('Tive um problema ao gerar o link. Vamos tentar de novo?', D.fast)
@@ -369,9 +369,9 @@ export default function ChatWizard() {
                   rel="noopener noreferrer"
                   className="w-full max-w-[320px] bg-teu text-white font-bold px-6 py-5 rounded-2xl shadow-xl text-[17px] text-center hover:bg-teu-dark active:scale-95 transition-all animate-pulse"
                 >
-                  🔒 Autorizar minha consulta
+                  🔓 Autorizar e ver minha oferta
                 </a>
-                <span className="text-[11px] text-gray-500">Toque para abrir a autorização segura do C6</span>
+                <span className="text-[11px] text-gray-500">Autorização oficial e segura do C6 · menos de 1 min ✅</span>
               </div>
             )}
             <div className="flex items-end gap-2 max-w-[88%]">
