@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import ChatBubble, { type Message, BtAvatar } from './ChatBubble'
 import TypingIndicator from './TypingIndicator'
-import { checkAuthStatus, pollAuthStatus, generateLiveness, finalize } from '../api'
+import { checkAuthStatus, pollAuthStatus, generateLiveness, finalize, capture } from '../api'
 import {
   validateCPF, formatCPF, formatPhone, formatDate,
   toISODate, formatCurrency, uid, sleep, getUtmParams, fbqTrack,
@@ -50,6 +50,18 @@ export default function ChatWizard() {
   const nomeRef     = useRef(''); useEffect(() => { nomeRef.current     = nome     }, [nome])
   const phoneRef    = useRef(''); useEffect(() => { phoneRef.current    = phone    }, [phone])
   const birthISORef = useRef(''); useEffect(() => { birthISORef.current = birthISO }, [birthISO])
+  // lead criado na captura-primeiro (CARRINHO ABANDONADO); o finalize move esse mesmo lead
+  const capturedLeadIdRef = useRef<string | null>(null)
+
+  // Captura-primeiro: cria o lead no carrinho assim que temos nome+CPF+telefone.
+  const captureNow = useCallback(async (phoneDigits: string) => {
+    try {
+      const r = await capture({
+        cpf: cpfRef.current, nome: nomeRef.current, telefone: phoneDigits, ...getUtmParams(),
+      })
+      if (r.lead_id) capturedLeadIdRef.current = String(r.lead_id)
+    } catch { /* best-effort: se falhar, o finalize cria o lead no desfecho */ }
+  }, [])
 
   const addBot = useCallback(async (text: string, delay = D.normal) => {
     setIsTyping(true)
@@ -79,6 +91,7 @@ export default function ChatWizard() {
       res = await finalize({
         cpf: cpfV, nome: nomeV, telefone: phoneV,
         data_nascimento: birthISOV || undefined,
+        lead_id: capturedLeadIdRef.current,
         ...getUtmParams(),
       })
     } catch {
@@ -270,6 +283,8 @@ export default function ChatWizard() {
       setPhone(digits)
       setStep('checking')
       setInputMode('none')
+      // Captura-primeiro: cria o lead no carrinho ANTES de gerar o link.
+      await captureNow(digits)
       await addBot('Gerando seu link de autorização...', D.normal)
 
       try {
@@ -303,6 +318,8 @@ export default function ChatWizard() {
       addUser(value)
       setPhone(digits)
       setInputMode('none')
+      // Captura-primeiro: garante o lead no carrinho antes de finalizar (que o moverá).
+      await captureNow(digits)
       await finalizeAndShow(cpfRef.current, nomeRef.current, digits, '')
     }
   }

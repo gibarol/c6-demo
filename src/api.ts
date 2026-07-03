@@ -103,12 +103,23 @@ export async function generateLiveness(data: {
   return post('/chat/liveness', data)
 }
 
-/** Cliente autorizado → checa oferta e cria o lead no Kommo (com/sem oferta). */
+/** Captura-primeiro: cria o lead em CARRINHO ABANDONADO com nome+CPF+telefone. */
+export async function capture(data: {
+  cpf: string
+  nome: string
+  telefone: string
+} & Utms): Promise<{ ok: boolean; lead_id?: string | null }> {
+  if (MOCK_MODE) { await sleep(300); return { ok: true, lead_id: 'mock-cart' } }
+  return post('/chat/capture', data)
+}
+
+/** Cliente autorizado → checa oferta e move/cria o lead no Kommo (com/sem oferta). */
 export async function finalize(data: {
   cpf: string
   nome: string
   telefone: string
   data_nascimento?: string
+  lead_id?: string | null
 } & Utms): Promise<FinalizeResponse> {
   if (MOCK_MODE) {
     await sleep(1200)
