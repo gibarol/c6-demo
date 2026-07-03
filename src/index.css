@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 16px;
+}
+
+.wa-bg {
+  background-color: #ECE5DD;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c5b8a8' fill-opacity='0.22'%3E%3Cpath d='M50 50v-10h-3v10h-10v3h10v10h3v-10h10v-3h-10zm0-40V0h-3v10h-10v3h10v10h3V13h10v-3h-10zM10 50v-10H7v10H-3v3h10v10h3v-10h10v-3H10zM10 10V0H7v10H-3v3h10v10h3V13h10v-3H10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Cauda dos balões — estilo WhatsApp */
+.bubble-bot {
+  position: relative;
+}
+.bubble-bot::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border-top: 10px solid white;
+  border-left: 10px solid transparent;
+}
+
+.bubble-user {
+  position: relative;
+}
+.bubble-user::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border-top: 10px solid #DCF8C6;
+  border-right: 10px solid transparent;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-enter { animation: slideIn 0.18s ease-out forwards; }
+
+@keyframes bounce-dot {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
