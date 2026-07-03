@@ -331,20 +331,22 @@ export default function ChatWizard() {
     <div className="flex flex-col h-full wa-bg">
 
       {/* Header */}
-      <div className="bg-teu text-white px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0">
-        <div className="w-11 h-11 rounded-full flex-shrink-0 overflow-hidden">
+      <div className="bg-gradient-to-br from-teu-light to-teu-dark text-white px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0">
+        <div className="w-11 h-11 rounded-full flex-shrink-0 overflow-hidden ring-2 ring-white/40 shadow-md">
           <BtAvatar size={44} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-bold text-[16px] leading-tight tracking-tight">Teu Crédito</p>
           <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-            <p className="text-[11px] text-gray-400">Crédito Rápido e Fácil</p>
+            <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0 animate-pulse" />
+            <p className="text-[11px] text-white/75">Crédito Rápido e Fácil</p>
           </div>
         </div>
-        <div className="flex-shrink-0 bg-white/15 rounded-md px-2 py-1">
-          <span className="text-[9px] text-white/60">via </span>
-          <span className="text-[11px] font-bold text-white">C6 Bank</span>
+        {/* Selo C6 no estilo real: wordmark preto sobre branco */}
+        <div className="flex-shrink-0 bg-white rounded-md px-2.5 py-1.5 flex items-baseline shadow-sm">
+          <span className="text-[8px] text-gray-400 mr-1">via</span>
+          <span className="text-[13px] font-extrabold text-black tracking-tight leading-none">C6</span>
+          <span className="text-[13px] font-light text-black tracking-tight leading-none">Bank</span>
         </div>
       </div>
 
