@@ -4,17 +4,18 @@ import TypingIndicator from './TypingIndicator'
 import { checkAuthStatus, pollAuthStatus, generateLiveness, finalize, capture } from '../api'
 import {
   validateCPF, formatCPF, formatPhone, formatDate,
-  toISODate, formatCurrency, uid, sleep, getUtmParams, fbqTrack,
+  formatCurrency, uid, sleep, getUtmParams, fbqTrack,
 } from '../utils'
 
 type InputMode = 'cpf' | 'name' | 'birth' | 'phone' | 'none'
 
 type Step =
   | 'waiting_name'
+  | 'waiting_clt'              // qualificador: trabalha CLT há +3 meses?
+  | 'dismissed'               // respondeu Não → fluxo encerrado educadamente
   | 'cpf'
   | 'checking'                 // processando, bloqueia input
   | 'waiting_phone_authorized' // já autorizado: só falta telefone p/ finalizar
-  | 'waiting_birth'            // não autorizado: pede nascimento
   | 'waiting_phone_liveness'   // não autorizado: pede telefone antes do liveness
   | 'polling_auth'             // aguarda autorização (polling)
   | 'waiting_interest'         // oferta exibida, aguarda resposta
@@ -26,6 +27,8 @@ type Step =
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? '5511999999999'
 const POLL_INTERVAL   = 15_000
 const POLL_TIMEOUT_MS  = 20 * 60 * 1000
+// Não coletamos mais a data de nascimento — o liveness usa esta data genérica fixa.
+const BIRTH_DEFAULT   = '1990-10-10'
 
 const D = { fast: 1200, normal: 2400, slow: 3000 }
 
@@ -40,7 +43,6 @@ export default function ChatWizard() {
   const [cpf,      setCpf]      = useState('')
   const [nome,     setNome]     = useState('')
   const [phone,    setPhone]    = useState('')
-  const [birthISO, setBirthISO] = useState('')
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
@@ -49,7 +51,6 @@ export default function ChatWizard() {
   const cpfRef      = useRef(''); useEffect(() => { cpfRef.current      = cpf      }, [cpf])
   const nomeRef     = useRef(''); useEffect(() => { nomeRef.current     = nome     }, [nome])
   const phoneRef    = useRef(''); useEffect(() => { phoneRef.current    = phone    }, [phone])
-  const birthISORef = useRef(''); useEffect(() => { birthISORef.current = birthISO }, [birthISO])
   // lead criado na captura-primeiro (CARRINHO ABANDONADO); o finalize move esse mesmo lead
   const capturedLeadIdRef = useRef<string | null>(null)
 
@@ -83,14 +84,14 @@ export default function ChatWizard() {
 
   // ── Finalização: checa oferta + cria lead no Kommo, exibe resultado ─────────
   const finalizeAndShow = useCallback(async (
-    cpfV: string, nomeV: string, phoneV: string, birthISOV: string,
+    cpfV: string, nomeV: string, phoneV: string,
   ) => {
     setStep('checking')
     let res
     try {
       res = await finalize({
         cpf: cpfV, nome: nomeV, telefone: phoneV,
-        data_nascimento: birthISOV || undefined,
+        data_nascimento: BIRTH_DEFAULT,
         lead_id: capturedLeadIdRef.current,
         ...getUtmParams(),
       })
@@ -142,13 +143,13 @@ export default function ChatWizard() {
         if (result.status === 'AUTORIZADO') {
           cancelled = true
           await addBot('✅ *Autorização confirmada!* Consultando sua oferta...', D.normal)
-          await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
+          await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current)
         } else if (result.status === 'NAO_AUTORIZADO' && result.observacao !== 'sem_registro') {
           // Terminal: biometria concluída, mas sem vínculo/margem CLT no autorizador.
           // Trata como "sem oferta": finalize consulta a oferta, confirma que não há e
           // cria o lead no Kommo p/ remarketing (mensagem educada, sem WhatsApp).
           cancelled = true
-          await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
+          await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current)
         }
       } catch { /* silencioso — tenta no próximo ciclo */ }
     }
@@ -166,6 +167,30 @@ export default function ChatWizard() {
     return () => { cancelled = true; clearInterval(timer); clearTimeout(timeout) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
+
+  // ── Qualificador CLT (Sim/Não) ──────────────────────────────────────────────
+  const handleCltReply = useCallback(async (choice: 'sim' | 'nao') => {
+    setStep('checking')
+    if (choice === 'sim') {
+      addUser('Sim, trabalho registrado(a) há mais de 3 meses.')
+      await addBot('Perfeito! 🙌', D.fast)
+      await addBot('Pode me informar o seu *CPF*?', D.normal)
+      setStep('cpf')
+      setInputMode('cpf')
+    } else {
+      addUser('Não.')
+      await addBot('Entendo, obrigado por responder. 🙏', D.fast)
+      await addBot(
+        'No momento, para seguir com uma oferta é necessário ter *carteira assinada há mais de 3 meses*.',
+        D.slow,
+      )
+      await addBot(
+        'Assim que sua situação mudar, será um prazer te ajudar. Até breve! 😊',
+        D.normal,
+      )
+      setStep('dismissed')
+    }
+  }, [addBot])
 
   // ── Quick reply (oferta) ────────────────────────────────────────────────────
   const handleQuickReply = useCallback(async (choice: 'sim' | 'nao') => {
@@ -216,9 +241,10 @@ export default function ChatWizard() {
       await addBot(`Prazer, *${first}*! 😊`, D.fast)
       await addBot('Somos correspondente bancário *autorizado* do C6 Bank.', D.normal)
       await addBot('Aqui você consulta o *Crédito Trabalhador* — desconto em folha, taxas competitivas, sem burocracia. 💳', D.slow)
-      await addBot(`Pode me informar o seu CPF, ${first}?`, D.normal)
-      setStep('cpf')
-      setInputMode('cpf')
+      // Qualificador: só segue quem tem carteira assinada há +3 meses.
+      await addBot('Só me confirma uma coisa antes: você trabalha *com carteira assinada (CLT) há mais de 3 meses*? 💼', D.normal)
+      setStep('waiting_clt')
+      setInputMode('none')
     }
 
     // ── CPF → checa autorização imediatamente ──────────────────────────────────
@@ -247,29 +273,16 @@ export default function ChatWizard() {
         setStep('waiting_phone_authorized')
         setInputMode('phone')
       } else {
-        // Não autorizado → precisa do liveness (coleta nascimento + telefone).
+        // Não autorizado → precisa do liveness. Não pedimos mais nascimento
+        // (usamos BIRTH_DEFAULT); só o telefone.
         await addBot(
           'Para consultar sua oferta no C6 Bank, preciso confirmar sua identidade. É rápido, menos de 1 minuto. 🔒',
           D.slow,
         )
-        await addBot('Qual é a sua *data de nascimento*? (DD/MM/AAAA)', D.normal)
-        setStep('waiting_birth')
-        setInputMode('birth')
+        await addBot('Qual é o seu *celular com DDD*?', D.normal)
+        setStep('waiting_phone_liveness')
+        setInputMode('phone')
       }
-    }
-
-    // ── Nascimento (caminho não autorizado) ────────────────────────────────────
-    else if (step === 'waiting_birth') {
-      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-        await addBot('Use o formato DD/MM/AAAA, por favor.', D.fast)
-        return
-      }
-      addUser(value)
-      setBirthISO(toISODate(value))
-      setInputMode('none')
-      await addBot('Ótimo! E qual é o seu *celular com DDD*?', D.fast)
-      setStep('waiting_phone_liveness')
-      setInputMode('phone')
     }
 
     // ── Telefone → gera liveness (caminho não autorizado) ──────────────────────
@@ -291,7 +304,7 @@ export default function ChatWizard() {
         const result = await generateLiveness({
           cpf: cpfRef.current,
           nome: nomeRef.current,
-          data_nascimento: birthISORef.current,
+          data_nascimento: BIRTH_DEFAULT,
           telefone: digits,
           lead_id: capturedLeadIdRef.current,
         })
@@ -321,7 +334,7 @@ export default function ChatWizard() {
       setInputMode('none')
       // Captura-primeiro: garante o lead no carrinho antes de finalizar (que o moverá).
       await captureNow(digits)
-      await finalizeAndShow(cpfRef.current, nomeRef.current, digits, '')
+      await finalizeAndShow(cpfRef.current, nomeRef.current, digits)
     }
   }
 
@@ -378,9 +391,9 @@ export default function ChatWizard() {
                     const r = await pollAuthStatus(cpfRef.current)
                     if (r.status === 'AUTORIZADO') {
                       await addBot('✅ *Autorização confirmada!* Consultando sua oferta...', D.normal)
-                      await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
+                      await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current)
                     } else if (r.status === 'NAO_AUTORIZADO' && r.observacao !== 'sem_registro') {
-                      await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current, birthISORef.current)
+                      await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current)
                     } else {
                       await addBot('Ainda aguardando sua autorização... pode levar alguns segundos. ⏳', D.fast)
                       setStep('polling_auth')
@@ -395,6 +408,24 @@ export default function ChatWizard() {
                 🔄 Verificar agora
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Qualificador CLT (Sim/Não) */}
+        {step === 'waiting_clt' && (
+          <div className="flex gap-2 ml-11 msg-enter pt-1 flex-wrap">
+            <button
+              onClick={() => handleCltReply('sim')}
+              className="bg-black text-white text-[14px] font-semibold px-5 py-2.5 rounded-full shadow hover:bg-gray-800 active:scale-95 transition-all"
+            >
+              ✅ Sim
+            </button>
+            <button
+              onClick={() => handleCltReply('nao')}
+              className="border border-gray-300 text-gray-500 text-[14px] px-5 py-2.5 rounded-full hover:bg-gray-100 active:scale-95 transition-all"
+            >
+              Não
+            </button>
           </div>
         )}
 
