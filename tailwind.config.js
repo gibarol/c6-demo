@@ -4,6 +4,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Identidade Teu Crédito
+        teu: {
+          DEFAULT: '#1B3FAE',
+          dark: '#16348C',
+          light: '#2E52C8',
+        },
         wa: {
           header: '#075E54',
           headerLight: '#128C7E',

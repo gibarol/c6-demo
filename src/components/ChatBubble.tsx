@@ -38,26 +38,26 @@ function RichText({ text }: { text: string }) {
 export function BtAvatar({ size = 40 }: { size?: number }) {
   return (
     <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" width={size} height={size}>
-      <circle cx="20" cy="20" r="20" fill="#111" />
-      {/* Cifrão */}
+      <circle cx="20" cy="20" r="20" fill="#1B3FAE" />
+      {/* teu */}
       <text
-        x="20" y="18"
+        x="20" y="20"
         textAnchor="middle"
-        fontFamily="system-ui, sans-serif"
-        fontWeight="900"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontWeight="800"
         fontSize="13"
         fill="white"
-      >$</text>
-      {/* Bt+ */}
+      >teu</text>
+      {/* crédito */}
       <text
         x="20" y="30"
         textAnchor="middle"
-        fontFamily="system-ui, sans-serif"
-        fontWeight="800"
-        fontSize="9"
-        letterSpacing="0.5"
-        fill="#dddddd"
-      >Bt+</text>
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontWeight="600"
+        fontSize="7"
+        letterSpacing="0.3"
+        fill="white"
+      >crédito</text>
     </svg>
   )
 }

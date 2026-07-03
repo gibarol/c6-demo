@@ -38,11 +38,11 @@ export default function ChatWizard() {
   const [isTyping, setIsTyping]   = useState(false)
   const [inputMode, setInputMode] = useState<InputMode>('none')
   const [input, setInput]         = useState('')
-  const [pollCount, setPollCount] = useState(0)
 
-  const [cpf,      setCpf]      = useState('')
-  const [nome,     setNome]     = useState('')
-  const [phone,    setPhone]    = useState('')
+  const [cpf,          setCpf]          = useState('')
+  const [nome,         setNome]         = useState('')
+  const [phone,        setPhone]        = useState('')
+  const [livenessLink, setLivenessLink] = useState('')
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
@@ -107,24 +107,18 @@ export default function ChatWizard() {
     if (res.tem_oferta && res.oferta) {
       const t = res.oferta
       await addBot('Consulta concluída... 👀', D.normal)
-      await addBot(`🎉 E eu tenho uma *excelente notícia* pra você, *${first}*!`, D.normal)
+      await addBot(`🎉 *${first}*, tenho uma ótima notícia!`, D.normal)
       await sleep(400)
       await addBot(
-        `💰 Você tem *${formatCurrency(t.valor_cliente)}* pré-aprovados\nem *${t.quantidade_parcelas}x* de *${formatCurrency(t.valor_parcela)}*\ncom desconto direto na folha.`,
+        `💰 Você tem *${formatCurrency(t.valor_cliente)}* pré-aprovados\nem *${t.quantidade_parcelas}x* de *${formatCurrency(t.valor_parcela)}*.`,
         D.slow,
       )
-      await addBot('Um *especialista* já pode finalizar tudo com você agora, com toda a segurança. Bora garantir? 😊', D.normal)
+      await addBot('Um *especialista* finaliza tudo com você agora. Bora? 😊', D.normal)
       setStep('waiting_interest')
     } else {
-      await addBot('Consulta concluída, *' + first + '*. 🙏', D.normal)
-      await addBot(
-        'No momento o C6 não liberou uma oferta pré-aprovada pro seu perfil — mas isso muda com frequência, principalmente a cada *virada de folha*.',
-        D.slow,
-      )
-      await addBot(
-        'Já deixei seu cadastro salvo com todo cuidado e, *assim que surgir uma condição pra você, a gente te avisa*. Combinado? 😊',
-        D.slow,
-      )
+      await addBot(`Consulta concluída, *${first}*. 🙏`, D.normal)
+      await addBot('No momento o C6 não liberou oferta pro seu perfil — mas isso muda a cada *virada de folha*.', D.slow)
+      await addBot('Guardei seu cadastro e te aviso assim que surgir algo. Combinado? 😊', D.normal)
       setStep('no_offer_done')
     }
   }, [addBot])
@@ -136,7 +130,6 @@ export default function ChatWizard() {
 
     const poll = async () => {
       if (cancelled) return
-      setPollCount(c => c + 1)
       try {
         const result = await pollAuthStatus(cpfRef.current)
         if (cancelled) return
@@ -173,22 +166,15 @@ export default function ChatWizard() {
     setStep('checking')
     if (choice === 'sim') {
       addUser('Sim, trabalho registrado(a) há mais de 3 meses.')
-      await addBot('Perfeito, você tem o perfil certo! 🙌', D.fast)
-      await addBot('Agora preciso do seu *CPF* — é com ele que eu faço a consulta *oficial e segura* no C6 pra descobrir o valor liberado especialmente pra você. 🔎', D.slow)
-      await addBot('Pode digitar sem preocupação: seus dados são usados *só pra essa consulta* e protegidos pela *LGPD*. 🔐', D.normal)
+      await addBot('Perfeito, você tem o perfil! 🙌', D.fast)
+      await addBot('Agora seu *CPF* — é com ele que faço a consulta oficial no C6. Seus dados são protegidos (*LGPD*). 🔐', D.normal)
       setStep('cpf')
       setInputMode('cpf')
     } else {
       addUser('Não.')
-      await addBot('Entendo, e agradeço muito sua sinceridade. 🙏', D.fast)
-      await addBot(
-        'No momento, o *Crédito do Trabalhador* exige *carteira assinada há mais de 3 meses* — por isso ainda não consigo seguir com uma oferta pra você.',
-        D.slow,
-      )
-      await addBot(
-        'Mas guarda a gente com carinho: assim que você completar esse tempo, será um prazer te ajudar a conquistar seu crédito. Até breve! 😊',
-        D.normal,
-      )
+      await addBot('Entendo, e obrigado pela sinceridade. 🙏', D.fast)
+      await addBot('O *Crédito do Trabalhador* pede *carteira assinada há mais de 3 meses* — por isso ainda não dá pra seguir.', D.normal)
+      await addBot('Quando completar esse tempo, volta aqui que a gente te ajuda! 😊', D.normal)
       setStep('dismissed')
     }
   }, [addBot])
@@ -211,9 +197,9 @@ export default function ChatWizard() {
   // ── Abertura ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const init = async () => {
-      await addBot('Olá! Que bom te ver por aqui. 👋 Sou o assistente digital da *Bt+Credi*.', D.fast)
-      await addBot('Em poucos passos eu verifico, *de graça e sem compromisso*, quanto de crédito você já tem disponível. 💚', D.normal)
-      await addBot('Pra começar, como você gostaria de ser chamado(a)?', D.fast)
+      await addBot('Oi! 👋 Sou o assistente digital da *Teu Crédito*.', D.fast)
+      await addBot('Em 1 minuto eu verifico, *grátis e sem compromisso*, quanto de crédito você tem disponível. 💚', D.normal)
+      await addBot('Como posso te chamar?', D.fast)
       setInputMode('name')
     }
     init()
@@ -241,10 +227,9 @@ export default function ChatWizard() {
       setNome(value)
       setInputMode('none')
       await addBot(`Prazer, *${first}*! 😊`, D.fast)
-      await addBot('Um ponto importante pra sua tranquilidade: somos *correspondente bancário autorizado do C6 Bank* — toda consulta é oficial e feita direto no banco. 🔒', D.slow)
-      await addBot('Aqui você descobre o *Crédito do Trabalhador*: empréstimo com desconto direto na folha, *juros baixos* e sem burocracia. 💳', D.slow)
+      await addBot('Somos *correspondente autorizado do C6 Bank* — consulta oficial e segura. 🔒', D.normal)
       // Qualificador: só segue quem tem carteira assinada há +3 meses.
-      await addBot(`Pra eu já verificar se você tem direito, me confirma uma coisa, ${first}: você está *com carteira assinada (CLT) há mais de 3 meses*? 💼`, D.normal)
+      await addBot('Pra começar: você tem *carteira assinada (CLT) há mais de 3 meses*? 💼', D.normal)
       setStep('waiting_clt')
       setInputMode('none')
     }
@@ -260,7 +245,7 @@ export default function ChatWizard() {
       setCpf(cpfDigits)
       setInputMode('none')
       setStep('checking')
-      await addBot('Ótimo! Deixa eu consultar isso pra você direto no C6... 🔎', D.normal)
+      await addBot('Ótimo! Consultando direto no C6... 🔎', D.normal)
 
       let authStatus = 'NAO_AUTORIZADO'
       try {
@@ -270,19 +255,16 @@ export default function ChatWizard() {
 
       if (authStatus === 'AUTORIZADO') {
         // Já autorizado → não precisa de liveness nem de data de nascimento.
-        await addBot('Excelente notícia: sua identidade *já está confirmada* no banco! ✅', D.normal)
-        await addBot('Só falta o seu *celular com DDD* pra eu liberar o resultado e nossa equipe conseguir te acompanhar. 📱', D.normal)
+        await addBot('Sua identidade *já está confirmada*! ✅', D.normal)
+        await addBot('Só o seu *celular com DDD* pra liberar o resultado. 📱', D.normal)
         setStep('waiting_phone_authorized')
         setInputMode('phone')
       } else {
         // Não autorizado → precisa do liveness. Não pedimos mais nascimento
         // (usamos BIRTH_DEFAULT); só o telefone.
-        await addBot('Localizei você no sistema! 🎯', D.fast)
-        await addBot(
-          'Pra liberar a consulta da sua oferta, o C6 pede uma *confirmação de identidade rápida e segura* — leva menos de 1 minuto. 🔒',
-          D.slow,
-        )
-        await addBot('Me passa seu *celular com DDD*? É por ele que eu te mantenho informado(a) durante o processo. 📱', D.normal)
+        await addBot('Localizei você! 🎯', D.fast)
+        await addBot('Pra liberar sua oferta, o C6 pede uma *confirmação rápida e segura* (1 minuto). 🔒', D.normal)
+        await addBot('Me passa seu *celular com DDD*? 📱', D.normal)
         setStep('waiting_phone_liveness')
         setInputMode('phone')
       }
@@ -301,7 +283,7 @@ export default function ChatWizard() {
       setInputMode('none')
       // Captura-primeiro: cria o lead no carrinho ANTES de gerar o link.
       await captureNow(digits)
-      await addBot('Show! Estou gerando seu *link seguro de autorização*... 🔐', D.normal)
+      await addBot('Show! Gerando seu *link seguro*... 🔐', D.normal)
 
       try {
         const result = await generateLiveness({
@@ -311,17 +293,13 @@ export default function ChatWizard() {
           telefone: digits,
           lead_id: capturedLeadIdRef.current,
         })
-        await addBot(`Chegamos no passo mais importante, *${nomeRef.current.split(' ')[0]}*! 🎯`, D.normal)
-        await addBot(
-          'Para o C6 liberar sua *oferta completa* — com o valor exato que você pode receber — ele precisa da *sua autorização* para consultar sua margem. É uma confirmação por *selfie*, feita direto no ambiente oficial do banco. 🔒',
-          D.slow,
-        )
-        await addBot(`Toca no link abaixo pra autorizar (leva menos de 1 minuto): 👇\n\n${result.link}`, D.normal)
-        await addBot('Assim que você concluir, eu *detecto na hora* e já te mostro o resultado aqui. Pode ir tranquilo(a) — fico no aguardo! ⏳', D.normal)
-        setPollCount(0)
+        setLivenessLink(result.link)
+        await addBot(`Último passo, *${nomeRef.current.split(' ')[0]}*! 🎯`, D.normal)
+        await addBot('Pra ver sua *oferta completa*, o C6 precisa da sua *autorização* — uma selfie rápida no app oficial. Eu detecto na hora que você concluir. 🔒', D.slow)
+        await addBot('É só tocar no botão abaixo 👇', D.normal)
         setStep('polling_auth')
       } catch {
-        await addBot('Erro ao gerar o link. Tenta de novo?', D.fast)
+        await addBot('Tive um problema ao gerar o link. Vamos tentar de novo?', D.fast)
         setStep('waiting_phone_liveness')
         setInputMode('phone')
       }
@@ -345,7 +323,7 @@ export default function ChatWizard() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   const waMessage = encodeURIComponent(
-    `Olá! Sou ${nome} e acabei de verificar minha oferta pela Bt+Credi. Gostaria de continuar o atendimento.`
+    `Olá! Sou ${nome} e acabei de verificar minha oferta pela Teu Crédito. Gostaria de continuar o atendimento.`
   )
   const showWhatsApp = step === 'authorized' || step === 'not_interested' || step === 'not_authorized'
 
@@ -353,19 +331,19 @@ export default function ChatWizard() {
     <div className="flex flex-col h-full wa-bg">
 
       {/* Header */}
-      <div className="bg-black text-white px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0">
+      <div className="bg-teu text-white px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0">
         <div className="w-11 h-11 rounded-full flex-shrink-0 overflow-hidden">
           <BtAvatar size={44} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-[16px] leading-tight tracking-tight">Bt+Credi</p>
+          <p className="font-bold text-[16px] leading-tight tracking-tight">Teu Crédito</p>
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
             <p className="text-[11px] text-gray-400">Crédito Rápido e Fácil</p>
           </div>
         </div>
-        <div className="flex-shrink-0 bg-gray-800 rounded-md px-2 py-1">
-          <span className="text-[9px] text-gray-500">via </span>
+        <div className="flex-shrink-0 bg-white/15 rounded-md px-2 py-1">
+          <span className="text-[9px] text-white/60">via </span>
           <span className="text-[11px] font-bold text-white">C6 Bank</span>
         </div>
       </div>
@@ -378,40 +356,31 @@ export default function ChatWizard() {
 
         {isTyping && <TypingIndicator />}
 
-        {/* Indicador de polling + verificação manual */}
+        {/* Botão de autorização em DESTAQUE + indicador de espera */}
         {step === 'polling_auth' && (
-          <div className="flex items-end gap-2 max-w-[88%] msg-enter">
-            <div className="w-9 h-9 rounded-full flex-shrink-0 mb-0.5 overflow-hidden shadow-sm">
-              <BtAvatar size={36} />
-            </div>
-            <div className="bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm space-y-2">
-              <p className="text-[13px] text-gray-500 animate-pulse">
-                ⏳ Verificando autorização{pollCount > 0 ? ` · ${pollCount}ª verificação` : ''}...
-              </p>
-              <p className="text-[11px] text-gray-400">Já autorizou? Clique para verificar agora:</p>
-              <button
-                onClick={async () => {
-                  setStep('checking')
-                  try {
-                    const r = await pollAuthStatus(cpfRef.current)
-                    if (r.status === 'AUTORIZADO') {
-                      await addBot('✅ *Autorização confirmada!* Consultando sua oferta...', D.normal)
-                      await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current)
-                    } else if (r.status === 'NAO_AUTORIZADO' && r.observacao !== 'sem_registro') {
-                      await finalizeAndShow(cpfRef.current, nomeRef.current, phoneRef.current)
-                    } else {
-                      await addBot('Ainda aguardando sua autorização... pode levar alguns segundos. ⏳', D.fast)
-                      setStep('polling_auth')
-                    }
-                  } catch {
-                    await addBot('Não consegui verificar agora. Seguimos tentando...', D.fast)
-                    setStep('polling_auth')
-                  }
-                }}
-                className="w-full bg-black text-white text-[12px] font-semibold px-3 py-1.5 rounded-full hover:bg-gray-800 active:scale-95 transition-all"
-              >
-                🔄 Verificar agora
-              </button>
+          <div className="space-y-3 msg-enter">
+            {livenessLink && (
+              <div className="flex flex-col items-center gap-1.5 pt-1">
+                <a
+                  href={livenessLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full max-w-[320px] bg-teu text-white font-bold px-6 py-5 rounded-2xl shadow-xl text-[17px] text-center hover:bg-teu-dark active:scale-95 transition-all animate-pulse"
+                >
+                  🔒 Autorizar minha consulta
+                </a>
+                <span className="text-[11px] text-gray-500">Toque para abrir a autorização segura do C6</span>
+              </div>
+            )}
+            <div className="flex items-end gap-2 max-w-[88%]">
+              <div className="w-9 h-9 rounded-full flex-shrink-0 mb-0.5 overflow-hidden shadow-sm">
+                <BtAvatar size={36} />
+              </div>
+              <div className="bg-white rounded-2xl rounded-tl-none px-4 py-2.5 shadow-sm">
+                <p className="text-[13px] text-gray-500 animate-pulse">
+                  ⏳ Aguardando você autorizar no link...
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -421,7 +390,7 @@ export default function ChatWizard() {
           <div className="flex gap-2 ml-11 msg-enter pt-1 flex-wrap">
             <button
               onClick={() => handleCltReply('sim')}
-              className="bg-black text-white text-[14px] font-semibold px-5 py-2.5 rounded-full shadow hover:bg-gray-800 active:scale-95 transition-all"
+              className="bg-teu text-white text-[14px] font-semibold px-5 py-2.5 rounded-full shadow hover:bg-teu-dark active:scale-95 transition-all"
             >
               ✅ Sim
             </button>
@@ -439,7 +408,7 @@ export default function ChatWizard() {
           <div className="flex gap-2 ml-11 msg-enter pt-1 flex-wrap">
             <button
               onClick={() => handleQuickReply('sim')}
-              className="bg-black text-white text-[14px] font-semibold px-5 py-2.5 rounded-full shadow hover:bg-gray-800 active:scale-95 transition-all"
+              className="bg-teu text-white text-[14px] font-semibold px-5 py-2.5 rounded-full shadow hover:bg-teu-dark active:scale-95 transition-all"
             >
               ✅ Sim, quero!
             </button>
@@ -483,7 +452,7 @@ export default function ChatWizard() {
             />
             <button
               type="submit"
-              className="w-11 h-11 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-800 active:scale-95 transition-all flex-shrink-0"
+              className="w-11 h-11 rounded-full bg-teu text-white flex items-center justify-center hover:bg-teu-dark active:scale-95 transition-all flex-shrink-0"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -491,7 +460,7 @@ export default function ChatWizard() {
             </button>
           </form>
           <p className="text-[11px] text-gray-400 text-center px-4 py-1.5 bg-[#F0F0F0]">
-            Bt+Credi · Correspondente Bancário Autorizado C6 · LGPD
+            Teu Crédito · Correspondente Bancário Autorizado C6 · LGPD
           </p>
         </div>
       )}
