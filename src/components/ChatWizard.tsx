@@ -293,6 +293,7 @@ export default function ChatWizard() {
           nome: nomeRef.current,
           data_nascimento: birthISORef.current,
           telefone: digits,
+          lead_id: capturedLeadIdRef.current,
         })
         await addBot(
           `Acesse o link abaixo e siga o processo de autorização:\n\n👉 ${result.link}\n\nÉ rápido, menos de 1 minuto! ✅`,

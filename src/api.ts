@@ -94,6 +94,7 @@ export async function generateLiveness(data: {
   nome: string
   data_nascimento: string   // AAAA-MM-DD
   telefone?: string
+  lead_id?: string | null
 }): Promise<LivenessResponse> {
   if (MOCK_MODE) {
     _mockAuthorized = true   // após gerar o link, o mock simula autorização
