@@ -6,6 +6,7 @@ import {
   validateCPF, formatCPF, formatPhone, formatDate,
   formatCurrency, uid, sleep, getUtmParams, fbqTrack,
 } from '../utils'
+import { track as ttTrack } from '../tiktok'
 
 type InputMode = 'cpf' | 'name' | 'birth' | 'phone' | 'none'
 
@@ -106,6 +107,7 @@ export default function ChatWizard() {
     }
 
     fbqTrack('Lead')  // conversão pro Meta Pixel
+    ttTrack('SubmitForm', { content_name: 'consulta_concluida' })  // otimização TikTok
     const first = nomeV.split(' ')[0]
 
     if (res.tem_oferta && res.oferta) {
@@ -190,6 +192,7 @@ export default function ChatWizard() {
     if (choice === 'sim') {
       addUser('Sim, quero! 😊')
       await addBot('Perfeito! 🙌 É só tocar no botão abaixo pra falar *agora* com um especialista e liberar seu crédito com toda a segurança. 👇', D.normal)
+      ttTrack('CompleteRegistration', { content_name: 'quero_falar_especialista' })
       setStep('authorized')
     } else {
       addUser('Agora não.')
